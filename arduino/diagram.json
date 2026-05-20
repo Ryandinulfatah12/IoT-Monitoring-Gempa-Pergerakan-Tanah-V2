@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "author": "Ryan Dinul Fatah",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp32",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-mpu6050",
+      "id": "mpu",
+      "top": -120,
+      "left": 240,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "soil",
+      "top": 120,
+      "left": 260,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-slide-potentiometer",
+      "id": "rain",
+      "top": 220,
+      "left": 250,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzzer",
+      "top": -93.6,
+      "left": -161.4,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledGreen",
+      "top": 80,
+      "left": -140,
+      "attrs": { "color": "green" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledYellow",
+      "top": 140,
+      "left": -140,
+      "attrs": { "color": "yellow" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledRed",
+      "top": 200,
+      "left": -140,
+      "attrs": { "color": "red" }
+    }
+  ],
+  "connections": [
+    ["esp32:3V3", "mpu:VCC", "red", []],
+    ["esp32:GND.1", "mpu:GND", "black", []],
+    ["esp32:22", "mpu:SCL", "green", []],
+    ["esp32:21", "mpu:SDA", "blue", []],
+    ["soil:VCC", "esp32:3V3", "red", []],
+    ["soil:GND", "esp32:GND.2", "black", []],
+    ["soil:SIG", "esp32:34", "orange", []],
+    ["rain:VCC", "esp32:3V3", "red", []],
+    ["rain:GND", "esp32:GND.2", "black", []],
+    ["rain:SIG", "esp32:35", "purple", []],
+    ["buzzer:1", "esp32:25", "red", []],
+    ["buzzer:2", "esp32:GND.1", "black", []],
+    ["ledGreen:A", "esp32:26", "green", []],
+    ["ledGreen:C", "esp32:GND.1", "black", []],
+    ["ledYellow:A", "esp32:27", "yellow", []],
+    ["ledYellow:C", "esp32:GND.1", "black", []],
+    ["ledRed:A", "esp32:14", "red", []],
+    ["ledRed:C", "esp32:GND.1", "black", []]
+  ],
+  "dependencies": {}
+}

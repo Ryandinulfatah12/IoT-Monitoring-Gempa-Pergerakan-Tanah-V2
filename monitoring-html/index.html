@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IoT Monitoring Gempa & Longsor</title>
+
+    <link rel="preload" href="assets/fonts/Ubuntu-Regular.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="assets/fonts/Ubuntu-Bold.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="stylesheet" href="assets/css/dashboard.css" />
+
+    <script src="libs/mqtt.min.js" defer></script>
+    <script src="libs/chart.js" defer></script>
+    <script src="assets/js/dashboard.js" defer></script>
+  </head>
+
+  <body>
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <div>
+            <p class="eyebrow">Realtime MQTT Dashboard</p>
+            <h1>Monitoring Gempa & Pergerakan Tanah</h1>
+            <div class="status-line">
+              <span class="pill warning" id="mqttStatus">MQTT: Menghubungkan</span>
+              <span class="broker-text" id="brokerText">Broker: -</span>
+            </div>
+          </div>
+        </div>
+
+        <form class="connection-panel" id="connectionForm">
+          <label class="sr-only" for="brokerInput">Broker WebSocket MQTT</label>
+          <input id="brokerInput" name="broker" autocomplete="off" inputmode="url" />
+          <button class="button primary" id="connectButton" type="submit">Connect</button>
+          <button class="button secondary" id="soundButton" type="button" aria-pressed="false">Sound Off</button>
+        </form>
+      </div>
+    </header>
+
+    <section class="critical-alert" id="criticalAlert" aria-live="assertive" hidden>
+      <div class="critical-inner">
+        <div class="alert-marker" aria-hidden="true"></div>
+        <div class="critical-copy">
+          <div class="critical-title">
+            <strong id="criticalTitle">ALERT TINGGI</strong>
+            <span id="criticalStatus">Level -</span>
+            <span class="critical-time" id="criticalTime">-</span>
+          </div>
+          <p class="critical-message" id="criticalMessage">-</p>
+        </div>
+        <button class="button light" id="ackAlert" type="button">Ditangani</button>
+      </div>
+    </section>
+
+    <main class="page">
+      <section class="summary-grid" aria-label="Status ringkas">
+        <article class="summary-card">
+          <span class="summary-label">Koneksi</span>
+          <strong class="summary-value" id="mqttStateText">Menghubungkan</strong>
+        </article>
+        <article class="summary-card">
+          <span class="summary-label">Update Terakhir</span>
+          <strong class="summary-value" id="lastUpdate">Belum ada data</strong>
+        </article>
+        <article class="summary-card">
+          <span class="summary-label">Usia Data</span>
+          <strong class="summary-value" id="dataAgeText">Menunggu data</strong>
+        </article>
+        <article class="summary-card">
+          <span class="summary-label">Alert High</span>
+          <strong class="summary-value normal" id="highValue">Tidak aktif</strong>
+        </article>
+      </section>
+
+      <section class="metric-grid" aria-label="Data sensor">
+        <article class="metric-card" id="levelCard">
+          <span class="metric-label">Level Sistem</span>
+          <span class="metric-note">0 Normal, 3 Evakuasi</span>
+          <strong class="metric-value normal" id="levelValue">0</strong>
+        </article>
+
+        <article class="metric-card" id="statusCard">
+          <span class="metric-label">Status</span>
+          <span class="metric-note">Keputusan risiko terbaru</span>
+          <strong class="metric-value normal" id="statusValue">Normal</strong>
+        </article>
+
+        <article class="metric-card">
+          <span class="metric-label">Total Getaran</span>
+          <span class="metric-note">Perubahan dari baseline MPU6050</span>
+          <strong class="metric-value" id="vibrationValue">0.00 m/s<sup>2</sup></strong>
+        </article>
+
+        <article class="metric-card">
+          <span class="metric-label">X Axis</span>
+          <span class="metric-note">Kemiringan kiri dan kanan</span>
+          <strong class="metric-value" id="xValue">0.00 m/s<sup>2</sup></strong>
+        </article>
+
+        <article class="metric-card">
+          <span class="metric-label">Y Axis</span>
+          <span class="metric-note">Kemiringan depan dan belakang</span>
+          <strong class="metric-value" id="yValue">0.00 m/s<sup>2</sup></strong>
+        </article>
+
+        <article class="metric-card">
+          <span class="metric-label">Z Axis</span>
+          <span class="metric-note">Getaran vertikal tanah</span>
+          <strong class="metric-value" id="zValue">9.81 m/s<sup>2</sup></strong>
+        </article>
+
+        <article class="metric-card">
+          <span class="metric-label">Soil Moisture</span>
+          <span class="metric-note">Pembacaan ADC kelembapan tanah</span>
+          <strong class="metric-value" id="soilValue">0 ADC</strong>
+        </article>
+
+        <article class="metric-card">
+          <span class="metric-label">Rain Sensor</span>
+          <span class="metric-note">Pembacaan ADC air atau hujan</span>
+          <strong class="metric-value" id="rainValue">0 ADC</strong>
+        </article>
+      </section>
+
+      <section class="workspace-grid">
+        <article class="panel chart-panel">
+          <div class="panel-header">
+            <div>
+              <p class="panel-kicker">Telemetry</p>
+              <h2>Grafik Sensor Realtime</h2>
+            </div>
+            <span class="panel-meta" id="chartMeta">60 sampel terakhir</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="accelChart"></canvas>
+          </div>
+        </article>
+
+        <article class="panel insight-panel">
+          <div class="panel-header">
+            <div>
+              <p class="panel-kicker">Analisis</p>
+              <h2>Kesimpulan Sistem</h2>
+            </div>
+          </div>
+          <p class="conclusion" id="conclusionText">Menunggu data sensor dari MQTT.</p>
+          <div class="device-meta" id="deviceMeta">Device: -</div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="panel-kicker">Riwayat</p>
+            <h2>Log Event</h2>
+          </div>
+          <span class="panel-meta" id="logMeta">Terbaru di atas</span>
+        </div>
+        <ul class="event-log" id="eventLog">
+          <li class="empty">Belum ada event.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
